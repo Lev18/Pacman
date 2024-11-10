@@ -3,29 +3,27 @@
 #include <fstream>
 #include "headers/Global.h"
 #include "headers/ConvertMap.h"
-#include "headers/DrawBoard.h"
 
 
 void pacman_move_dir(const int& dir, sf::Sprite& spritesheet) {
         switch(dir) {
             case 0:
-                spritesheet.move(sf::Vector2f(0, -10));
+                spritesheet.move(sf::Vector2f(0, -8));
                 break;
             case 1:
-                spritesheet.move(sf::Vector2f(0, 10));
+                spritesheet.move(sf::Vector2f(0, 8));
                 break;
             case 2:
-                spritesheet.move(sf::Vector2f(10, 0));
+                spritesheet.move(sf::Vector2f(8, 0));
                 break;
 
             case 3:
-                spritesheet.move(sf::Vector2f(-10, 0));
+                spritesheet.move(sf::Vector2f(-8, 0));
                 break;
         }
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(MAP_WIDTH * (CELL_SIZE + 2), MAP_HEIGHT * (CELL_SIZE +2)), "SFML works!"); 
    
     std::array<std::string, MAP_HEIGHT> i_map { {
        " ###################### ",
@@ -54,7 +52,10 @@ int main() {
        } 
       };
 
-    std::array<std::array<Cell, MAP_WIDTH>, MAP_HEIGHT> map = convert_map(i_map);
+    Map map(i_map);
+  
+    sf::RenderWindow window(sf::VideoMode(MAP_WIDTH * (CELL_SIZE + 2), MAP_HEIGHT * (CELL_SIZE + 2)), "SFML works!"); 
+
     sf::Texture texture;
 
     if(!texture.loadFromFile("./Pacman16.png")){
@@ -67,9 +68,12 @@ int main() {
     int anim_speed = 301;
     sf::Sprite sprite(texture);
     sprite.setScale(1.0f, 1.0f);
+    sprite.setPosition((MAP_WIDTH * (CELL_SIZE + 2)) / 2 - 16, (MAP_HEIGHT * (CELL_SIZE + 2)) / 2 - 32);
 
       while (window.isOpen()) {    
         sf::Event event;
+        int pacman_x_cord = sprite.getPosition().x;
+        int pacman_y_cord = sprite.getPosition().y;
         while (window.pollEvent(event)) {
             switch (event.type)  {
                 case sf::Event::Closed:
@@ -96,9 +100,7 @@ int main() {
                     }
             }
         }
-        window.clear();
-        draw_map(map,window);
-        
+        window.clear(); 
 
         if (frame_speed % anim_speed == 0) {
             pacman_ord += 16;
@@ -108,10 +110,12 @@ int main() {
             }
         }
 
+        map.draw_map(map.get_mapped_array(), window);
         sprite.setTextureRect(sf::IntRect(pacman_ord, pacman_dir, 16, 16));  
-        window.draw(sprite);
+        //    std::cout << sprite.getPosition().x << '\n' << sprite.getPosition().y << '\n';
 
        ++frame_speed;
+       window.draw(sprite);
        window.display();
     }
 
