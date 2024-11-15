@@ -10,7 +10,7 @@ Map::Map(std::array<std::string, MAP_HEIGHT>& i_map) : new_arr{}{
         switch (i_map[j][i]) {
           case '#': {
             new_arr[j][i] = Cell::Wall;
-            //iattrib_coord.push_back({Cell::Wall, {j, i}});
+            // attrib_coord.push_back({Cell::Wall, {CELL_SIZE * static_cast<float>(j), CELL_SIZE * static_cast<float>(i)}});
             break; 
           }
 
@@ -36,7 +36,7 @@ Map::Map(std::array<std::string, MAP_HEIGHT>& i_map) : new_arr{}{
     }
 }
 
-std::vector<std::pair<Cell, std::pair<int, int>>> Map::get_map_position() const {
+std::vector<std::pair<Cell, std::pair<float, float>>> Map::get_map_position() const {
     return attrib_coord;
 }
 
@@ -81,7 +81,6 @@ void Map::draw_map(const std::array<std::array<Cell, MAP_WIDTH>, MAP_HEIGHT>& ma
              window.draw(sprite);
              break;
            }
-
            case Cell::Wall: {
                bool up = (j > 0) && (map[j - 1][i] == Cell::Wall);
                bool down = (j < MAP_HEIGHT - 1) && (map[j + 1][i] == Cell::Wall);
@@ -100,3 +99,28 @@ void Map::draw_map(const std::array<std::array<Cell, MAP_WIDTH>, MAP_HEIGHT>& ma
       }
     }
 }
+
+int Map::find(std::vector<std::pair<Cell, std::pair<float, float>>>& cell_arr, std::pair<float, float> pacman_coords) const {
+    int low = 0;
+    int high = cell_arr.size() - 1;
+
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+
+    std::cout << pacman_coords.second << ' ' <<pacman_coords.first  << ' ' << cell_arr[mid].second.first << ' ' <<cell_arr[mid].second.second << '\n';
+        if (cell_arr[mid].second.first == pacman_coords.second 
+                && cell_arr[mid].second.second == pacman_coords.first) {
+            return 1;
+        }
+        if (pacman_coords.second <= cell_arr[mid].second.second) {
+            high = mid - 1;
+        }
+        else {
+            low = mid + 1;
+        }
+    }
+    return -1;
+
+}
+
+

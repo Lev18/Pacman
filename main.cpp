@@ -8,20 +8,21 @@
 void pacman_move_dir(const int& dir, sf::Sprite& spritesheet) {
         switch(dir) {
             case 0:
-                spritesheet.move(sf::Vector2f(0, -8));
+                spritesheet.move(sf::Vector2f(0, -16));
                 break;
             case 1:
-                spritesheet.move(sf::Vector2f(0, 8));
+                spritesheet.move(sf::Vector2f(0, 16));
                 break;
             case 2:
-                spritesheet.move(sf::Vector2f(8, 0));
+                spritesheet.move(sf::Vector2f(16, 0));
                 break;
 
             case 3:
-                spritesheet.move(sf::Vector2f(-8, 0));
+                spritesheet.move(sf::Vector2f(-16, 0));
                 break;
         }
 }
+
 
 int main() {
    
@@ -68,12 +69,28 @@ int main() {
     int anim_speed = 301;
     sf::Sprite sprite(texture);
     sprite.setScale(1.0f, 1.0f);
-    sprite.setPosition((MAP_WIDTH * (CELL_SIZE + 2)) / 2 - 16, (MAP_HEIGHT * (CELL_SIZE + 2)) / 2 - 32);
+    sprite.setPosition((MAP_WIDTH * (CELL_SIZE + 2)) / 2 - 15, (MAP_HEIGHT * (CELL_SIZE + 2)) / 2 - 31);
+    auto cell_cord = map.get_map_position();
 
-      while (window.isOpen()) {    
+    std::string file_path {"./energy_cord.txt"};
+    std::fstream file {file_path, std::ios::out | std::ios::trunc};
+    while (window.isOpen()) {    
         sf::Event event;
-        int pacman_x_cord = sprite.getPosition().x;
-        int pacman_y_cord = sprite.getPosition().y;
+        
+        float pacman_x_cord = sprite.getPosition().x;
+        float pacman_y_cord = sprite.getPosition().y;
+
+         // std::cout << ' ' << pacman_x_cord << ' ' << pacman_y_cord << '\n'; 
+        if (map.find(cell_cord, {pacman_x_cord, pacman_y_cord}) == 1) {
+            std::cout << "touched to " << pacman_x_cord << ' ' << pacman_y_cord << '\n';
+        }
+        
+        
+        for (const auto& it : cell_cord) {
+            file << it.second.first << ' ' << it.second.second << '\n';
+        }
+        file.close();
+
         while (window.pollEvent(event)) {
             switch (event.type)  {
                 case sf::Event::Closed:
@@ -97,7 +114,12 @@ int main() {
                             pacman_move_dir(1, sprite);
                             pacman_dir = 48;
                             break;
+                        default: {
+                        }
                     }
+                default: {
+                
+                }
             }
         }
         window.clear(); 
@@ -110,9 +132,9 @@ int main() {
             }
         }
 
+        
         map.draw_map(map.get_mapped_array(), window);
         sprite.setTextureRect(sf::IntRect(pacman_ord, pacman_dir, 16, 16));  
-        //    std::cout << sprite.getPosition().x << '\n' << sprite.getPosition().y << '\n';
 
        ++frame_speed;
        window.draw(sprite);
