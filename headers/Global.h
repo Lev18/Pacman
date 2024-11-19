@@ -11,7 +11,9 @@ enum class Cell {
   Empty,
   Wall,
   Energy,
-  Pellet
+  Pellet,
+  Pacman,
+  Ghost
 };
 
 
