@@ -10,18 +10,31 @@ Map::Map(std::array<std::string, MAP_HEIGHT>& i_map) : new_arr{}{
         switch (i_map[j][i]) {
           case '#': {
             new_arr[j][i] = Cell::Wall;
+              sf::RectangleShape rect;
+              rect.setSize(sf::Vector2f(CELL_SIZE, CELL_SIZE));
+              rect.setFillColor(sf::Color::Blue);
+
+              rect.setPosition(i * CELL_SIZE, j * CELL_SIZE);
+              all_walls.push_back(rect);
             // attrib_coord.push_back({Cell::Wall, {CELL_SIZE * static_cast<float>(j), CELL_SIZE * static_cast<float>(i)}});
             break; 
           }
 
           case 'o': {
             new_arr[j][i] = Cell::Energy;
-            // attrib_coord.push_back({Cell::Energy, {j, i}});
+            //attrib_coord.push_back({Cell::Energy, {j, i}});
             break; 
           }
 
           case '.': {
             new_arr[j][i] = Cell::Pellet;
+              sf::RectangleShape rect;
+              rect.setSize(sf::Vector2f(CELL_SIZE, CELL_SIZE));
+              rect.setFillColor(sf::Color::Blue);
+
+              rect.setPosition(i * CELL_SIZE, j * CELL_SIZE);
+              all_pallets.push_back(rect);
+
             //attrib_coord.push_back({Cell::Pellet, {j, i}});
             break; 
           }
@@ -30,6 +43,27 @@ Map::Map(std::array<std::string, MAP_HEIGHT>& i_map) : new_arr{}{
             new_arr[j][i] = Cell::Door;
            // attrib_coord.push_back({Cell::Energy, {j, i}});
             break; 
+          }
+          case 'P': {
+            new_arr[j][i] = Cell::Pacman;
+            attrib_coord.push_back({Cell::Pacman, {i, j}});
+            break;
+          }
+        // this part is hardcoded
+          case '1':{
+            new_arr[j][i] = Cell::Ghost;
+            attrib_coord.push_back({Cell::Ghost, {i, j}});
+            break;
+          }
+          case '2':{
+            new_arr[j][i] = Cell::Ghost;
+            attrib_coord.push_back({Cell::Ghost, {i, j}});
+            break;
+          }
+         case '3':{
+            new_arr[j][i] = Cell::Ghost;
+            attrib_coord.push_back({Cell::Ghost, {i, j}});
+            break;
           }
         }
       }
@@ -42,6 +76,18 @@ std::vector<std::pair<Cell, std::pair<float, float>>> Map::get_map_position() co
 
 const std::array<std::array<Cell, MAP_WIDTH>, MAP_HEIGHT> Map::get_mapped_array() const {
     return new_arr;
+}
+
+void Map::set_type(int i, int j, Cell cell) {
+    new_arr[j][i] = cell ;
+}
+
+const std::vector<sf::RectangleShape> Map::get_walls() const {
+    return all_walls;
+}
+
+const std::vector<sf::RectangleShape> Map::get_pallets() const {
+    return all_pallets;
 }
 
 void Map::draw_map(const std::array<std::array<Cell, MAP_WIDTH>, MAP_HEIGHT>& map, sf::RenderWindow& window) {
@@ -57,21 +103,22 @@ void Map::draw_map(const std::array<std::array<Cell, MAP_WIDTH>, MAP_HEIGHT>& ma
     sf::Sprite sprite(texture);
 
     sprite.setScale(1.0f, 1.0f);
+
     for (int i = 0; i < MAP_HEIGHT; ++i) {
       for (int j = 0; j < MAP_WIDTH; ++j) {
          sprite.setPosition(CELL_SIZE * static_cast<float>(i),CELL_SIZE * static_cast<float>(j));
 
          switch (map[j][i]) {
            case  Cell::Pellet: {
-             sprite.setTextureRect(sf::IntRect(0, CELL_SIZE,CELL_SIZE,CELL_SIZE));
-             attrib_coord.push_back({Cell::Pellet, {CELL_SIZE * i, CELL_SIZE * j}});
+             sprite.setTextureRect(sf::IntRect(0, CELL_SIZE, CELL_SIZE, CELL_SIZE));
+             // attrib_coord.push_back({Cell::Pellet, {CELL_SIZE * i, CELL_SIZE * j}});
              window.draw(sprite);
              break;
             }
 
            case Cell::Door: {
              sprite.setTextureRect(sf::IntRect(2*CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE));
-             attrib_coord.push_back({Cell::Door, {i, j}});
+            // attrib_coord.push_back({Cell::Door, {i, j}});
              window.draw(sprite);
              break;
             }
@@ -87,13 +134,34 @@ void Map::draw_map(const std::array<std::array<Cell, MAP_WIDTH>, MAP_HEIGHT>& ma
                bool left = (i > 0) && (map[j][i - 1] == Cell::Wall);
                bool right = (i < MAP_WIDTH - 1) && (map[j][i + 1] == Cell::Wall);
 
-              int textureIndex = down + 2 * (left + 2 * (right + 2 * up));
+               int textureIndex = down + 2 * (left + 2 * (right + 2 * up));
 
               sprite.setTextureRect(sf::IntRect(CELL_SIZE * textureIndex, 0, CELL_SIZE, CELL_SIZE));
-              window.draw(sprite);
-            }
-            case (Cell::Empty): {
+              /*
+              sf::RectangleShape rect;
+              rect.setSize(sf::Vector2f(CELL_SIZE, CELL_SIZE));
+              rect.setFillColor(sf::Color::Blue);
 
+              rect.setPosition(i * CELL_SIZE, j* CELL_SIZE);
+              */
+              window.draw(sprite);
+              break;
+            }
+           case(Cell::Pacman): {
+                attrib_coord.push_back({Cell::Pacman, {i, j}});
+                break;
+            }
+
+            case (Cell::Empty): {
+              sf::RectangleShape rect;
+              rect.setSize(sf::Vector2f(CELL_SIZE, CELL_SIZE));
+              rect.setFillColor(sf::Color::Black);
+
+              rect.setPosition(i * CELL_SIZE, j * CELL_SIZE);
+              window.draw(rect);
+              break;
+            }
+            case (Cell::Ghost): {
             }
          }
       }

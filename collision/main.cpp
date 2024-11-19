@@ -5,8 +5,8 @@
 
 
 bool check_colision(float pac_x, float pac_y, sf::RectangleShape& rect) {
-    float pac_height = 16;
-    float pac_width  = 16;
+    float pac_height = 8;
+    float pac_width  = 8;
     sf::Vector2f rect_size = rect.getSize();
     sf::Vector2f rect_pos = rect.getPosition();
     
@@ -92,7 +92,6 @@ int main() {
         
         float pacman_x_cord = sprite.getPosition().x;
         float pacman_y_cord = sprite.getPosition().y;
-        std::cout << pacman_x_cord << ' ' << pacman_y_cord << '\n';
 
         while (window.pollEvent(event)) {
             switch (event.type)  {
