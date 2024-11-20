@@ -46,7 +46,7 @@ void eating_pallet(sf::Sprite& spritesheet, Map& map,  std::vector<sf::Rectangle
 
     for (auto& it : all_pallets) {
         if (is_pacman_eats(new_x, new_y, it)) {
-            map.set_type(new_x / CELL_SIZE, new_y / CELL_SIZE, Cell::Empty);
+            map.set_type((int)(new_x / CELL_SIZE), (int)(new_y / CELL_SIZE), Cell::Empty);
           std::cout << "it intesects with pallet" << '\n';
         }
     }
@@ -93,7 +93,7 @@ int main() {
        " ###################### ",
        " #..........#.........# ",
        " #o##.#####.#.#####.#o# ",
-       " #..........#.........# ",
+       " ##.........#........## ",
        " #.##.#.##.##.###..#. # ",
        " #....#....#...#.....## ",
        " ####.#.##.###.####.### ",
@@ -138,7 +138,30 @@ int main() {
 
     sf::Sprite sprite(texture);
     sprite.setScale(1.0f, 1.0f);
-    sprite.setPosition((float)(attrib_cords[3].second.first * (CELL_SIZE)), (float)(attrib_cords[3].second.second * (CELL_SIZE)));
+    sprite.setPosition((float)(attrib_cords[2].second.first * (CELL_SIZE)), (float)(attrib_cords[2].second.second * (CELL_SIZE)));
+
+    sf::Texture ghost_tex;
+
+    if(!ghost_tex.loadFromFile("./Ghost16.png")){
+            std::cerr << "Unable to load from file";
+            exit(1);
+    }
+   
+
+    sf::Sprite ghost1(ghost_tex);
+    ghost1.setScale(1.0f, 1.0f);
+    ghost1.setPosition((float)(attrib_cords[0].second.first * (CELL_SIZE)), (float)(attrib_cords[0].second.second * (CELL_SIZE)));
+    ghost1.setColor(sf::Color::Red);
+    
+    sf::Sprite ghost3(ghost_tex);
+    ghost3.setScale(1.0f, 1.0f);
+    ghost3.setPosition((float)(attrib_cords[3].second.first * (CELL_SIZE)), (float)(attrib_cords[3].second.second * (CELL_SIZE)));
+    ghost3.setColor(sf::Color::Yellow);
+   
+    sf::Sprite ghost_eyes(ghost_tex);
+    ghost_eyes.setScale(1.0f, 1.0f);
+    ghost_eyes.setPosition((float)(attrib_cords[3].second.first * (CELL_SIZE)), (float)(attrib_cords[3].second.second * (CELL_SIZE)));
+
 
     auto cell_cord = map.get_map_position();
 
@@ -208,8 +231,15 @@ int main() {
        map.draw_map(map.get_mapped_array(), window);
 
        sprite.setTextureRect(sf::IntRect(pacman_ord, pacman_dir, 16, 16));  
+       ghost1.setTextureRect(sf::IntRect(pacman_ord, 0, 16,16));
+       ghost3.setTextureRect(sf::IntRect(pacman_ord, 0, 16,16));
+       ghost_eyes.setTextureRect(sf::IntRect(16, 16, 16, 16));
 
        ++frame_speed;
+
+       window.draw(ghost1);
+       window.draw(ghost3);
+       window.draw(ghost_eyes);
        window.draw(sprite);
        window.display();
     }
