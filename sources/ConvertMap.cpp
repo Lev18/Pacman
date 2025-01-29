@@ -1,7 +1,12 @@
-#include "headers/ConvertMap.h"
 #include <iostream>
+#include <filesystem>
+#include <cstdlib>
 
-Map::Map(std::array<std::string, MAP_HEIGHT>& i_map) : new_arr{}{
+#include "../headers/ConvertMap.h"
+
+
+
+Map::Map(std::array<std::string, MAP_HEIGHT>& i_map) : new_arr{} {
     for (int i = 0; i < MAP_HEIGHT; ++i) {
       for (int j = 0; j < MAP_WIDTH; ++j) {
         
@@ -94,8 +99,11 @@ void Map::draw_map(const std::array<std::array<Cell, MAP_WIDTH>, MAP_HEIGHT>& ma
     sf::Texture texture;
     texture.setRepeated(true);
 
-    if (!texture.loadFromFile("Map16.png")) {
-      std::cerr << "Unable to load from file" << std::endl;
+    std::filesystem::path curr_path   = std::filesystem::current_path();
+    std::filesystem::path parent_path = curr_path.parent_path();
+
+    if (!texture.loadFromFile(curr_path / "resources/Map16.png")) {
+      std::cerr << "Unable to load map from file" << std::endl;
       return ;
     }
 
@@ -190,5 +198,3 @@ int Map::find(std::vector<std::pair<Cell, std::pair<float, float>>>& cell_arr, s
     return -1;
 
 }
-
-
