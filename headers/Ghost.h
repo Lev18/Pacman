@@ -18,7 +18,13 @@ class Ghost {
         sf::Sprite m_ghost;
         sf::Sprite m_ghost_eyes;
         sf::Texture m_ghost_texture;
-    private:
-        const float m_ghost_speed = 100.0f;
+        
+        const float m_ghost_speed = 10.0f;
         sf::Clock m_clock;
+    private:
+        void move_adj_cell(const sf::Vector2f& direction, const std::vector<sf::RectangleShape>& walls,
+                          const sf::Vector2f& pacman_pos);      
+        bool reached_to_dest(const sf::Vector2f& direction, const sf::Vector2f& pacman_pos);
+        Move_Direction get_direction(int rand_dir);
+
 };
