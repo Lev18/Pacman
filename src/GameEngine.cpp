@@ -19,7 +19,6 @@ bool check_colision(float pac_x, float pac_y, const sf::RectangleShape& walls) {
 
 }
 */
-
 void GameEngine::game_start() {
    
     std::array<std::string, MAP_HEIGHT> i_map { {
@@ -56,8 +55,7 @@ void GameEngine::game_start() {
     auto all_pallets = map.get_pallets(); 
     auto attrib_coords = map.get_map_position();
 
-
-    sf::RenderWindow window(sf::VideoMode(MAP_WIDTH * (CELL_SIZE + 2), MAP_HEIGHT * (CELL_SIZE + 2)), "SFML works!"); 
+    sf::RenderWindow window(sf::VideoMode(MAP_WIDTH * (CELL_SIZE + 2), MAP_HEIGHT * (CELL_SIZE + 2)), "Pacman"); 
 
     // Creating Pacman 
     Pacman pacman((float)(attrib_coords[2].second.first *  CELL_SIZE),
@@ -79,7 +77,6 @@ void GameEngine::game_start() {
     Ghost blue_ghost((float)(attrib_coords[3].second.first * CELL_SIZE),
                     (float)(attrib_coords[3].second.second * CELL_SIZE),
                     sf::Color::Blue, ghost_resource); 
-
        // std::cout << map.get_mapped_array().size() << ' ' << texture.getSize().y << std::endl;
     while (window.isOpen()) {    
         sf::Event event;
@@ -130,7 +127,7 @@ void GameEngine::game_start() {
        pacman.animation_render(anim_speed);
 
        // TODO: integrate ghost movement
-        yellow_ghost.running_to_catch(pacman, walls);
+        red_ghost.running_to_catch(pacman, walls);
        
        yellow_ghost.ghost_animation(pacman_ord);
        blue_ghost.ghost_animation(pacman_ord);
