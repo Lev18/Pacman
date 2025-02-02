@@ -1,11 +1,20 @@
 #include <filesystem>
 #include <iostream>
 #include <cmath>
+#include <queue>
 
 #include "../headers/Global.h"
 #include "../headers/Ghost.h"
 
+const sf::Vector2i pixelPosToGridPos( float pixel_x, float pixel_y ){
+    //  Map a window-pixel position to a map-grid position
+    return (sf::Vector2i){(int)(pixel_x / GRID_SIZE), (int)(pixel_y / GRID_SIZE)} ;
+}
 
+const sf::Vector2f gridPosToPixelPos( float pixel_x, float pixel_y ){
+    //  Map a window-pixel position to a map-grid position
+    return sf::Vector2f(pixel_x * GRID_SIZE, pixel_y * GRID_SIZE);
+}
 
 Ghost::Ghost(float ghost_x, float ghost_y, sf::Color color, const std::string resource) :
             m_ghost_x(ghost_x), m_ghost_y(ghost_y), m_ghost_color(color), m_resource(resource) {
@@ -26,6 +35,9 @@ Ghost::Ghost(float ghost_x, float ghost_y, sf::Color color, const std::string re
             m_ghost_eyes.setTexture(m_ghost_texture);
             m_ghost_eyes.setScale(1.0f, 1.0f);
             m_ghost_eyes.setPosition(m_ghost_x, m_ghost_y);
+
+            // direction 
+            m_direction = static_cast<Move_Direction>(rand() % 4);
 }
 
 void Ghost::ghost_animation(int order) {
@@ -38,129 +50,132 @@ void Ghost::draw_ghost(sf::RenderWindow& window) {
     window.draw(m_ghost_eyes);
 }
 
-void Ghost::running_to_catch(const Pacman& pacman,  const std::vector<sf::RectangleShape>& walls) {
-    sf::Vector2f pac_pos = pacman.get_pacman().getPosition();
-    sf::Vector2f ghost_pos = m_ghost.getPosition();
-
-    sf::Vector2f direction = pac_pos - ghost_pos;
-
-    float lenght = std::sqrt(direction.x * direction.y + direction.y * direction.y);
-
-    if (lenght != 0) {
-        direction /= lenght;
-    }
-
-    // sf::Vector2f new_pos = (direction*m_ghost_speed*delta_time);
-     move_adj_cell(direction, walls, pac_pos);
+Move_Direction Ghost::get_opposite_direction() {
+    // Return the compass-opposite of our current movement direction 
+        if (m_direction == Move_Direction::UP)    return Move_Direction::DOWN;
+        if (m_direction == Move_Direction::DOWN) return Move_Direction::UP;
+        if (m_direction == Move_Direction::RIGHT)  return Move_Direction::LEFT;
+        return Move_Direction::RIGHT;
 }
 
-bool move_to(const std::vector<sf::RectangleShape>& walls, float coord_x, float coord_y) {
 
-    for (const sf::RectangleShape& vec : walls) {
-        if (check_colision(coord_x, coord_y, vec)) {
-            return false;
+  std::vector<Move_Direction> Ghost::available_moves(const std::array<std::string, MAP_HEIGHT>& map) {
+        // Consult the map to see where is good to go from here.
+        //  We only consider walls, not other NPCs """
+        std::vector<Move_Direction> exits;
+
+        sf::Vector2i map_pos = pixelPosToGridPos(m_ghost.getPosition().x, m_ghost.getPosition().y);
+        // handle wrap-around, where it's possible to go "off grid"
+
+        // checking NORTH
+        if (map_pos.y > 0 && map[ map_pos.y - 1 ][ map_pos.x ] != '#' ) {
+            exits.push_back(Move_Direction::UP);
         }
+
+        // checking EAST
+        if (map_pos.x < MAP_WIDTH - 1 && map[ map_pos.y ][ map_pos.x + 1 ] != '#' ) {
+            exits.push_back(Move_Direction::RIGHT);
+        }
+
+        // checking SOUTH
+        if (map_pos.y < MAP_HEIGHT - 1 && map[ map_pos.y +  1 ][ map_pos.x ] != '#' ) {
+            exits.push_back(Move_Direction::DOWN);
+        }
+
+        // checking WEST
+        if (map_pos.x > 0 && map[ map_pos.y][ map_pos.x - 1 ] != '#' ) {
+            exits.push_back(Move_Direction::LEFT);
+        }
+
+        return exits;
     }
 
-    return true;
-}
+    void Ghost::move_forward(const std::array<std::string, MAP_HEIGHT>& map) {
+        /* Move in the current direction.  Generally we use the map
+            to keep us in-bounds, but on the wrap-around we can get
+            close to the edge of the map, so use special handling for
+            warping
+          handle wrap-around avenue
+        */
 
-bool Ghost::reached_to_dest(const sf::Vector2f& pacman_pos, const sf::Vector2f& ghsot_pos) {
-    return std::abs(pacman_pos.x - ghsot_pos.x) < 16 && std::abs(pacman_pos.y - ghsot_pos.y) < 16;
-}
+        sf::Vector2i map_pos = pixelPosToGridPos(m_ghost.getPosition().x, m_ghost.getPosition().y);
 
-Move_Direction Ghost::get_direction(int move_dir) {
-    Move_Direction direction;
-    switch (move_dir) {
-        case 0:
-            direction = Move_Direction::UP;
-            break;
-        case 1:
-            direction = Move_Direction::DOWN;
-            break;
-        case 2:
-            direction = Move_Direction::LEFT;
-            break;
-        case 3:
-            direction = Move_Direction::RIGHT;
-            break;
+        if (map[ map_pos.y ][ map_pos.x ] == '<' ) {
+            m_direction = Move_Direction::LEFT;
+            // self.rect.x = (MAP_WIDTH-1) * GRID_SIZE
+            m_ghost.setPosition((MAP_WIDTH - 2) * GRID_SIZE, m_ghost.getPosition().y);
+            m_ghost_eyes.setPosition((MAP_WIDTH - 2) * GRID_SIZE, m_ghost.getPosition().y);
+            return;
+        }
+        else if ( map[map_pos.y ][ map_pos.x ] == '>' ) {
+            m_direction = Move_Direction::RIGHT;
+            // self.rect.x = 0
+            m_ghost.setPosition( GRID_SIZE, m_ghost.getPosition().y);
+            m_ghost_eyes.setPosition( GRID_SIZE, m_ghost.getPosition().y);
+            return;
+        }
+        // Whichever direction we're moving in, go forward
+        float dx = 0.0f;
+        float dy = 0.0f;
+
+        switch (m_direction) {
+            case Move_Direction::UP:
+                dy = -GRID_SIZE;
+                break;
+            case Move_Direction::DOWN:
+                dy = GRID_SIZE;
+                break;
+            case Move_Direction::RIGHT:
+                dx = GRID_SIZE;
+                break;
+            case Move_Direction::LEFT:
+                dx = -GRID_SIZE;
+                break;
+        }
+        /*
+        if (m_direction == Move_Direction::UP ) {
+            m_ghost.move(0, -GRID_SIZE);
+            m_ghost_eyes.move(0, -GRID_SIZE);
+        }
+        else if (m_direction == Move_Direction::DOWN) {
+            m_ghost.move(0, GRID_SIZE);
+            m_ghost_eyes.move(0, -GRID_SIZE);
+        }
+        else if (m_direction == Move_Direction::RIGHT ) {
+            m_ghost.move(GRID_SIZE, 0);
+            m_ghost_eyes.move(0, -GRID_SIZE);
+        }
+        else if (m_direction == Move_Direction::LEFT) {
+            m_ghost.move(-GRID_SIZE, 0);
+            m_ghost_eyes.move(-GRID_SIZE, 0);     
+        }
+        */
+        m_ghost.move(dx, dy);
+        m_ghost_eyes.move(dx, dy); 
     }
-    return direction;
-}
 
-void Ghost::move_adj_cell(const sf::Vector2f& direction, 
-        const std::vector<sf::RectangleShape>& walls, 
-        const sf::Vector2f& pacman_pos) {
 
-     if(reached_to_dest(pacman_pos, m_ghost.getPosition())) {
-         return;
+void Ghost::running_to_catch(const std::array<std::string, MAP_HEIGHT>& map) {
+    sf::Vector2f pos = m_ghost.getPosition();
+    bool is_alligned = (static_cast<int>(pos.x) % GRID_SIZE == 0) &&
+                       (static_cast<int>(pos.y) % GRID_SIZE == 0);
+
+     if (!is_alligned) {
+         move_forward(map);
      }
-    bool can_move_up = move_to(walls, m_ghost.getPosition().x, m_ghost.getPosition().y - 8);
-    bool can_move_down = move_to(walls, m_ghost.getPosition().x, m_ghost.getPosition().y + 8);
-    bool can_move_left = move_to(walls, m_ghost.getPosition().x - 8, m_ghost.getPosition().y );
-    bool can_move_right = move_to(walls, m_ghost.getPosition().x + 8, m_ghost.getPosition().y);
-   
 
+    std::vector<Move_Direction> exits = available_moves(map);
+    // Generally: Keep moving in current direction, never u-turn
+    Move_Direction opposite = get_opposite_direction();
 
-    std::cout << "Can move up: " << can_move_up << std::endl;
-    std::cout << "Can move down: " << can_move_down << std::endl;
-    std::cout << "Can move left: " << can_move_left << std::endl;
-    std::cout << "Can move right: " << can_move_right << std::endl;
-
-    float delta_time = m_clock.restart().asSeconds();
-    sf::Vector2f move_offset(0.0f, 0.0f);
-
-    if (std::abs(direction.x) > std::abs(direction.y)) {
-        // Prefer horizontal movement
-        if (direction.x < 0 && can_move_left) {
-            move_offset.x = -8.0f;
-        } 
-        else if (direction.x > 0 && can_move_right) {
-            move_offset.x = 8.0f;
-        }
-    }
-    else {
-        if (direction.y < 0 && can_move_up) {
-            move_offset.y = -8.0f;
-        } 
-        else if (direction.y > 0 && can_move_down) {
-            move_offset.y = 8.0f;
-        }
-    }
-    
-    if (move_offset.x == 0 && move_offset.y == 0) {
-        if (direction.y < 0 && can_move_up) {
-            move_offset.y = -8.0f;
-        }        
-        else if (direction.y > 0 && can_move_down) {
-            move_offset.y = 8.0f;
-        }
-        else if (direction.x < 0 && can_move_left) {
-            move_offset.x = -8.0f;
-        }
-        else if (direction.x > 0 && can_move_right) {
-            move_offset.x = 8.0f;
-        }
+    exits.erase( std::remove(exits.begin(),exits.end(), opposite), exits.end());
+            // std::cout << exits.size() << '0';
+    if (!exits.size()) {
+        exits.push_back(opposite);
     }
 
-  // If ghost is blocked in both directions, pick a random available move
-    if (move_offset.x == 0 && move_offset.y == 0) {
-        std::vector<sf::Vector2f> possible_moves;
-        if (can_move_up)    possible_moves.push_back({0, -8.0f});
-        if (can_move_down)  possible_moves.push_back({0, 8.0f});
-        if (can_move_left)  possible_moves.push_back({-8.0f, 0});
-        if (can_move_right) possible_moves.push_back({8.0f, 0});
+    m_direction = exits[rand() % exits.size()];
 
-        if (!possible_moves.empty()) {
-            move_offset = possible_moves[rand() % possible_moves.size()];
-        }
-    }
-    // Move ghost
-    m_ghost.move(move_offset * m_ghost_speed * delta_time);
-    m_ghost_eyes.move(move_offset * m_ghost_speed * delta_time);
-
-    m_ghost_x = m_ghost.getPosition().x;
-    m_ghost_y = m_ghost.getPosition().y;
-
+    //  Move-it- Move-it
+    move_forward(map);
 }
-

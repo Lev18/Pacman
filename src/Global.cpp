@@ -7,7 +7,7 @@ bool check_colision(float coord_x, float coord_y, const sf::RectangleShape& wall
     sf::FloatRect wall_bounds = walls.getGlobalBounds();
     sf::FloatRect pac_bounds(coord_x, coord_y, pac_width, pac_height);
 
-    return pac_bounds.intersects(wall_bounds);
+    return pac_bounds.intersects(wall_bounds);// pac_bounds.intersects(wall_bounds);
 
 
 }
