@@ -33,7 +33,7 @@ void GameEngine::game_start() {
        " ####.#  ##   ## ##.### ",
        "    #.#  #  0  # # .  # ",
        "#####.#  ###=### ##.####",
-       "     .   #1 2 3# # .     ",
+       "<    .   #1 2 3# # .   > ",
        "#####.## ####### ##.####",
        " #..#.......##........# ",
        " #.##.#############.# # ",
@@ -55,7 +55,7 @@ void GameEngine::game_start() {
     auto all_pallets = map.get_pallets(); 
     auto attrib_coords = map.get_map_position();
 
-    sf::RenderWindow window(sf::VideoMode(MAP_WIDTH * (CELL_SIZE + 2), MAP_HEIGHT * (CELL_SIZE + 2)), "Pacman"); 
+    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Pacman"); 
 
     // Creating Pacman 
     Pacman pacman((float)(attrib_coords[2].second.first *  CELL_SIZE),
@@ -77,10 +77,18 @@ void GameEngine::game_start() {
     Ghost blue_ghost((float)(attrib_coords[3].second.first * CELL_SIZE),
                     (float)(attrib_coords[3].second.second * CELL_SIZE),
                     sf::Color::Blue, ghost_resource); 
+    std::vector<Ghost*> all_ghosts = {&yellow_ghost, &red_ghost, &blue_ghost}; 
        // std::cout << map.get_mapped_array().size() << ' ' << texture.getSize().y << std::endl;
-    while (window.isOpen()) {    
-        sf::Event event;
+    sf::Clock clock;
+    float movement_interval = 0.3f;
+    float time_since_last_move = 0.0f;
 
+    while (window.isOpen()) {
+        sf::Time deltaTime = clock.restart();
+        time_since_last_move += deltaTime.asSeconds();
+
+
+        sf::Event event;
         while (window.pollEvent(event)) {
             
             switch (event.type)  {
@@ -122,13 +130,19 @@ void GameEngine::game_start() {
 
 
        window.clear(); 
+
        map.draw_map(map.get_mapped_array(), window);
 
        pacman.animation_render(anim_speed);
 
        // TODO: integrate ghost movement
-        red_ghost.running_to_catch(pacman, walls);
-       
+       if (time_since_last_move > movement_interval) {
+           for (auto* ghost : all_ghosts) {
+             ghost->running_to_catch(i_map);  
+           }
+           time_since_last_move = 0;
+       }
+
        yellow_ghost.ghost_animation(pacman_ord);
        blue_ghost.ghost_animation(pacman_ord);
        red_ghost.ghost_animation(pacman_ord);

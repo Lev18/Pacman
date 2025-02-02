@@ -99,7 +99,7 @@ void Pacman::move_to_dir(Move_Direction dir, std::vector<sf::RectangleShape>& al
         m_pacman.move(offset);
     }
     else {
-        std::cout << "Collision detected, movement blocked!" << std::endl;
+        // std::cout << "Collision detected, movement blocked!" << std::endl;
 
     }
 }
